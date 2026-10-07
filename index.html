@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:">
+<title>رحلة عبر الزمن</title>
+<style>
+:root{--navy:#0b1a3a;--navy2:#13285a;--gold:#e0b44c;--teal:#2bb6b0;--ink:#f4f1e6;--bad:#ff8a80;--ok:#7be0a0;--banner-h:60px}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:Cairo,Tajawal,Tahoma,"Segoe UI",sans-serif;background:radial-gradient(circle at 20% 10%,#1d3a7a,var(--navy) 60%);color:var(--ink);min-height:100vh;padding-top:calc(var(--banner-h) + 10px)}
+#banner{position:fixed;top:0;right:0;left:0;z-index:9;text-align:center;padding:6px 8px;background:linear-gradient(90deg,#1b2d5e,#c9a23f,#1b2d5e);color:#fff;font-size:.85rem;line-height:1.4;text-shadow:0 1px 2px #000}
+main{max-width:760px;margin:auto;padding:12px}
+h1,h2{color:var(--gold);outline:none}
+.card{background:var(--navy2);border:1px solid #2c4a8f;border-radius:14px;padding:16px;margin:10px 0}
+button,select,input{font:inherit;min-height:48px;border-radius:10px;border:2px solid var(--gold);padding:8px 14px;margin:4px 0}
+button{background:var(--navy);color:var(--ink);cursor:pointer;width:100%;text-align:right}
+button.p{background:var(--gold);color:#101010;font-weight:700;text-align:center}
+button:disabled{opacity:.5;cursor:not-allowed}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+input,select{width:100%;background:#fff;color:#111}
+.err{color:var(--bad);min-height:1.2em}
+.row{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between}
+.good{border-color:var(--ok)!important}.wrong{border-color:var(--bad)!important}
+.low{color:var(--bad);font-weight:700}
+.bar{height:10px;background:#0006;border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--teal)}
+#cert{background:#fbf5df;color:#222;border:10px double #b8902a;padding:24px;text-align:center}
+#cert h2{color:#8a6a10}
+@media print{@page{size:A4 landscape;margin:0}#banner,button,.noprint{display:none!important}body{background:#fff;padding:0}#cert{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body>
+<div id="banner"><b>تصميم رائد السقار – مدرس الدراسات الاجتماعية</b><br>مدرسة محمد بن راشد – الحلقة الثانية والثالثة – دبي</div>
+<main id="app"></main>
+<script>
+/* [CONFIG] */
+const CONFIG={pass:70,mastery:80,bossGate:75,hearts:3,extraTime:false,
+ time:{mcq:30,tf:30,match:45,order:45,scenario:40,boss:25},
+ levels:[{n:1,name:"المبتدئ",pts:10,show:8},{n:2,name:"المستكشف",pts:20,show:3},{n:3,name:"المحلل",pts:30,show:4},{n:4,name:"القائد",pts:40,show:3},{n:5,name:"التحدي الأكبر",pts:30,show:8}],
+ school:"مدرسة محمد بن راشد – الحلقة الثانية والثالثة – دبي",teacher:"رائد السقار – معلم الدراسات الاجتماعية",principal:"عبدالله علي عيسى – مدير المدرسة",ver:1};
+/* [QUESTIONS_DATA] — الحقول: l مستوى، t نوع، c مفاهيم، x نص، o خيارات، a الإجابة، h تلميح، e تفسير، s مرجع */
+const Q=[
+{id:"1-01",l:1,t:"mcq",c:["C1"],x:"متى بعث القنصل العام الأمريكي في الظهران تقريره السري عن أول لقاء بحاكم أبوظبي الشاب؟",o:["تشرين الثاني/نوفمبر 1968","كانون الأول/ديسمبر 1801","سنة 1863","سنة 1948"],a:0,h:"جاء بعد تقرير بيلي بأكثر من قرن.",e:"ذكر الملف أن تقرير دينزمور بُعث في تشرين الثاني/نوفمبر 1968.",s:"ص23 – مدخل الفصل"},
+{id:"1-02",l:1,t:"mcq",c:["C1"],x:"من المبعوث البريطاني الذي رصد عام 1863 انطباعاته عن زيارته للخليج؟",o:["لويس بيلي","ديفيد سيتون","ويلفرد ثيسيجر","جيه. بي. كيلي"],a:0,h:"سبق دينزمور بأكثر من قرن.",e:"هو لويس بيلي.",s:"ص24 – الوطن والشعب"},
+{id:"1-03",l:1,t:"mcq",c:["C1"],x:"أي عبارة اختزلت صفات الكفاءة والقوة والصراحة في وصف الشيخ زايد؟",o:["«عربي من الصحراء»","«صاحب الرُّجولة»","«الشيخ الناجح»","«متعدد الأنشطة»"],a:0,h:"وردت في تقرير القنصل.",e:"كانت العبارة تجسيداً يختزل تلك الصفات.",s:"ص23 – مدخل الفصل"},
+{id:"1-04",l:1,t:"mcq",c:["C3"],x:"ما أول العناصر الثلاثة التي شكّلت مجتمع البدو؟",o:["طبيعة المكان","البنية السياسية","البنية الأخلاقية","التجارة البحرية"],a:0,h:"البيئة حدّدت أبعاد عالمهم.",e:"أولها طبيعة المكان ثم البنية السياسية ثم البنية الأخلاقية.",s:"ص27 – الوطن والشعب"},
+{id:"1-05",l:1,t:"mcq",c:["C3","C8"],x:"ما البنية الأخلاقية التي ربطت بين البدو؟",o:["مبدأ الشرف","الزعامة القبلية","البيئة الطبيعية","تحالف بني ياس"],a:0,h:"مبدأ يلتزم به كل البدو.",e:"وصفها الملف بمبدأ الشرف.",s:"ص27 – الوطن والشعب"},
+{id:"1-08",l:1,t:"mcq",c:["C4"],x:"ما الموطن الأصلي لبني ياس؟",o:["ليوا","العين","جزيرة أبوظبي","جزيرة زركوه"],a:0,h:"نحو ثلاثين واحة.",e:"ليوا هي الموطن الأصلي لبني ياس.",s:"ص31 – البيئة الطبيعية: الصحراء"},
+{id:"1-10",l:1,t:"mcq",c:["C8"],x:"ماذا يعد فقدان الشرف عند أفراد القبيلة؟",o:["شكلاً من أشكال «الموت الاجتماعي»","غنيمة حرب","ميثاق حماية","نزاعاً قبلياً"],a:0,h:"عبارة من كلمتين.",e:"ورد النص بهذا المعنى.",s:"ص37 – منظومة القيم في المجتمع القبلي"},
+{id:"1-11",l:1,t:"mcq",c:["C11"],x:"من أي أسرة اختير شيخ بني ياس منذ أصبح ذلك تقليداً؟",o:["آل نهيان","آل مكتوم","آل بوشامس","الظواهر"],a:0,h:"الشيخ زايد منها.",e:"اختير شيخ بني ياس من سلالة آل نهيان.",s:"ص41 – قبيلة بني ياس"},
+{id:"1-12",l:1,t:"mcq",c:["C15"],x:"في أي عام قام مجلس التعاون لدول الخليج العربية؟",o:["1981","1966","1997","1955"],a:0,h:"ورد في ختام الفصل.",e:"قيامه عام 1981 جسّد سعي الشيخ زايد للتعاون الخليجي.",s:"ص51 – ختام الفصل"},
+{id:"1-14",l:1,t:"mcq",c:["C2"],x:"كيف ينظر الملف إلى القبلية في شبه الجزيرة العربية؟",o:["رابطة إيجابية تمنح القوة والتماسك","مرحلة بدائية","أسلوب حياة من الماضي","عقبة أمام التحديث"],a:0,h:"رأي الغربيين مختلف.",e:"الخيارات الأخرى رؤى الغربيين الذين ينتقد الملف تصورهم.",s:"ص26 – الوطن والشعب"},
+{id:"2-02",l:2,t:"match",c:["C4","C5"],x:"طابق بين الموقع ووصفه",p:[["ليوا","الموطن الأصلي لبني ياس"],["العين","المدينة التي وصلتها المياه العذبة من الجبال"],["زركوه","جزيرة صغيرة فيها أطلال حصن أوربي"],["الربع الخالي","«بحر الرمال»"]],h:"بعضها واحات وبعضها جزر.",e:"وصف كل موقع كما ورد في الملف.",s:"ص28–31"},
+{id:"2-04",l:2,t:"match",c:["C16","C15"],x:"طابق بين التاريخ والحدث",p:[["1833","استقرار آل بوفلاسة في دبي"],["1948","رحلة ثيسيجر إلى أبوظبي"],["1968","تقرير دينزمور"],["1981","قيام مجلس التعاون"]],h:"اربط كل تاريخ بالحدث.",e:"التواريخ وردت في مواضعها.",s:"ص23، 30، 46، 51"},
+{id:"2-06",l:2,t:"match",c:["C6"],x:"طابق بين الجماعة ونشاطها",p:[["القبائل البرية","تربية الماشية وزراعة الواحات"],["القبائل البحرية","صيد الأسماك والغوص والتجارة البحرية"],["قبائل الحجاز","أنشطة الحج والعمرة"],["بنو ياس","ينتمون إلى الفئتين معاً"]],h:"أنماط المعيشة.",e:"الأنشطة كما وردت.",s:"ص32–33"},
+{id:"3-01",l:3,t:"order",c:["C16"],x:"رتّب زمنياً من الأقدم إلى الأحدث",i:["وصف سيتون (1801)","انطباعات بيلي (1863)","رحلة ثيسيجر (1948)","تقرير دينزمور (1968)","قيام مجلس التعاون (1981)"],h:"ابحث عن السنوات.",e:"1801 ثم 1863 ثم 1948 ثم 1968 ثم 1981.",s:"ص23–51"},
+{id:"3-02",l:3,t:"order",c:["C12","C16"],x:"رتّب زمنياً",i:["استقرار آل بوفلاسة في دبي (1833)","انفصال القبيسات حتى 1837","انفصال القبيسات حتى 1878","انفصال القبيسات حتى 1966"],h:"تعاقب الشيوخ.",e:"الأعوام وردت في الصفحة 46.",s:"ص46"},
+{id:"3-05",l:3,t:"tf",c:["C13","C14"],x:"«استندت سلطة الشيخ في بني ياس إلى القوة العسكرية في المقام الأول.»",v:false,o:["لأنها قامت على توازن الحقوق والواجبات لا على القوة","لأن الشيخ يعين بالوراثة المطلقة","لأن الشعب يقبل أي شيخ بلا شروط"],a:0,h:"سلطة سياسية في جوهرها.",e:"الملف يؤكد أنها لم تُبنَ على القوة.",s:"ص48"},
+{id:"3-06",l:3,t:"tf",c:["C10","C7"],x:"«قام تحالف بني ياس على رابطة الدم وحدها.»",v:false,o:["لأن المصالح المشتركة والأعراف تضافرت ولم تكن رابطة الدم الوحيدة","لأنهم جميعاً من أصل واحد","لأن التحالف ضم قبائل بحرية فقط"],a:0,h:"المصالح المشتركة.",e:"رابطة الدم لم تكن العامل الجوهري أو الوحيد.",s:"ص44"},
+{id:"3-08",l:3,t:"tf",c:["C2"],x:"«كانت ثقافة القبيلة عقبة أمام التحديث في الخليج.»",v:false,o:["لأنها بنية ثابتة لا تتغير","لأن هذه الثقافة المرنة مكّنت شعوب الخليج من استيعاب التطور في جيل واحد","لأن التحديث لم يبدأ في الخليج"],a:1,h:"المرونة.",e:"لم تكن عقبة بل مكّنت من الاستيعاب.",s:"ص26"},
+{id:"3-09",l:3,t:"tf",c:["C9"],x:"«الإقناع وليس القوة هو أساس السلطة عند قبائل الجزيرة العربية، كما يرى كاتون.»",v:true,o:["لأنها تميل إلى الحوار والتفاهم أكثر من الصراع","لأن الشيوخ لا يملكون قوة عسكرية","لأن المجلس لا يعقد إلا في المعارك"],a:0,h:"رأي ستيفن كاتون.",e:"قول كاتون في الملف.",s:"ص39"},
+{id:"4-01",l:4,t:"scenario",c:["C12","C14"],x:"أنت شيخ بني ياس وأرادت جماعة (القبيسات) الانفصال لتأسيس سلطة مستقلة. ماذا تفعل؟",o:["إجبارهم على البقاء بالقوة","تسوية الخلاف حتى تتأكد الجماعة أن عودتها في صالحها","إخراجهم نهائياً"],a:1,f:["لا يملك شيخ إجبار شعبه على البقاء.","كل محاولة انتهت بمصالحة وعودة.","كان بإمكانهم العودة إلى المنظومة."],h:"نهاية كل محاولة.",e:"انتهت كل محاولة انفصال بمصالحة وعودة.",s:"ص46، 49"},
+{id:"4-02",l:4,t:"scenario",c:["C9","C15"],x:"نشب خلاف مع أعداء الأمس. ما الأنسب؟",o:["مد اليد إليهم والإصغاء في مجلس واحد","حسم الخلاف بالسيف","الانعزال عنهم"],a:0,f:["هذا نهج زايد الكبير والشيخ زايد.","الكلمة بدل السيف هي الطريق.","الشيخ زايد لم يكن ينعزل عن الآخرين."],h:"الكلمة بدل السيف.",e:"استند الشيخان إلى جوهر التقاليد البدوية.",s:"ص40، 51"},
+{id:"4-05",l:4,t:"scenario",c:["C8","C9"],x:"خلاف مع خصم وتريد صون شرفك. ماذا تفعل؟",o:["مواجهته علناً وبسط الحجة والمنطق","تدبير المكايد من وراء ظهره","أخذ ممتلكاته في الخفاء"],a:0,f:["المواجهة العلنية بالحجة من الشرف.","الطعن في الشرف يلحق من يدبر المكايد.","أخذ الممتلكات في الخفاء سرقة وفعل غير شريف."],h:"المجلس.",e:"الملف يفصل كل حالة.",s:"ص38–39"},
+{id:"5-02",l:5,t:"tf",c:["C5"],x:"«اعتمد توافر الماء في ليوا، بخلاف العين، على الأمطار السنوية.»",v:true,o:["لأن مياه الجبال لم تنساب إليها وقد لا تهطل الأمطار لسنوات","لأن مياهها تنساب من الجبال","لأن لها مصدر ماء واحداً"],a:0,h:"الواحات الثلاثون.",e:"ورد ذلك في الملف.",s:"ص31"},
+{id:"5-04",l:5,t:"mcq",c:["C11"],x:"لماذا اختير آل نهيان لزعامة بني ياس؟",o:["لأنهم اعتبروا من أهل الكفاءة وأصحاب الشرف","لانتمائهم إلى سلالة عرقية خاصة","لانتمائهم إلى فئة اجتماعية أعلى","لأنهم الأقوى عسكرياً"],a:0,h:"الكفاءة.",e:"لم يكن الاختيار لسلالة أو فئة أعلى.",s:"ص41"},
+{id:"5-05",l:5,t:"mcq",c:["C8"],x:"ما الذي وقف وراء معظم الصراعات القبلية بشكل أو بآخر؟",o:["ما يتهدد الشرف بمفهومه المتسع","قلة المياه","الاختلاف في النسب","التنافس على الزعامة"],a:0,h:"الشرف.",e:"ورد ذلك في الملف.",s:"ص47"},
+{id:"5-07",l:5,t:"mcq",c:["C15"],x:"كيف تعامل الشيخ زايد مع الخلافات؟",o:["نبذ العنف وآثر الحوار والتفاهم","انعزل","لجأ إلى القوة","اكتفى بتوحيد إمارته"],a:0,h:"الحوار.",e:"ورد ذلك في ختام الفصل.",s:"ص51"},
+{id:"5-08",l:5,t:"tf",c:["C11","C14"],x:"«كان دور الشيخ في بني ياس وراثياً بصورة مطلقة.»",v:false,o:["لأنه يعين بقرار رسمي","لأنه إذا لم يثبت أهليته استبدلوا به آخر من أقاربه","لأن الحلفاء الخارجيين يختارونه"],a:1,h:"الأهلية.",e:"القبيلة تستبدل به آخر من أقاربه.",s:"ص48"},
+{id:"5-09",l:5,t:"mcq",c:["C2"],x:"ما الذي مكّن شعوب الخليج من استيعاب التطور الجديد خلال جيل واحد؟",o:["ثقافة القبيلة المرنة","دعم القوى الخارجية","هجر ثقافة القبيلة","التقنية وحدها"],a:0,h:"المرونة.",e:"ورد ذلك في الملف.",s:"ص26"},
+{id:"5-12",l:5,t:"mcq",c:["C10"],x:"من حلفاء بني ياس الرئيسيون بحسب الدراستين؟",o:["المناصير والعوامر والظواهر","آل بوفلاسة والقبيسات وآل بوشامس","النعيم وقبائل الحجاز","آل مكتوم وآل نهيان"],a:0,h:"حلفاء رئيسيون.",e:"ورد ذلك في الملف.",s:"ص41"},
+{id:"5-13",l:5,t:"mcq",c:["C16"],x:"متى بدأت القوى الخارجية تبدي اهتماماً أكبر بشبه الجزيرة؟",o:["بداية القرن التاسع عشر","بداية القرن العشرين","القرن السابع للميلاد","منتصف القرن الثامن عشر"],a:0,h:"مصر والعثمانيون وبريطانيا.",e:"ورد ذلك في الملف.",s:"ص34"}
+];
+/* [CONCEPTS] */
+const CONCEPTS={C1:"دينزمور وبيلي",C2:"القبيلة رابطة إيجابية مرنة",C3:"العناصر الثلاثة",C4:"جغرافية المنطقة",C5:"الماء والتكيف",C6:"أنماط المعيشة",C7:"النسب",C8:"الشرف والقيم",C9:"الحوار والإقناع",C10:"تحالف بني ياس",C11:"زعامة آل نهيان",C12:"الانفصال والعودة",C13:"الشيخ الناجح",C14:"الولاء المتبادل",C15:"إرث الشيخ زايد",C16:"التسلسل الزمني"};
+/* [LESSONS] */
+const LESSONS={1:[["دينزمور وبيلي","بعث القنصل لي دينزمور تقريره في تشرين الثاني/نوفمبر 1968 ووصف الشيخ زايد بأنه «عربي من الصحراء». وقبله بأكثر من قرن (1863) رصد المبعوث لويس بيلي انطباعاته ورأى أن الظروف الطبيعية شكّلت صفات العرب.","ص23–24"],["العناصر الثلاثة","تشكّل مجتمع البدو من ثلاثة عناصر: طبيعة المكان، والبنية السياسية (القبيلة والزعامة)، والبنية الأخلاقية (مبدأ الشرف).","ص27"],["القبلية والتكيف","القبلية رابطة إيجابية تمنح القوة والتماسك، وثقافة القبيلة المرنة مكّنت شعوب الخليج من استيعاب التطور الجديد خلال جيل واحد.","ص26"],["الشرف","يتجسد الشرف في الضيافة والكرم والصدق والعفة والإيثار وحرمة الضيف والشهامة والشجاعة، وفقدانه «موت اجتماعي».","ص37"],["بنو ياس وآل نهيان","ليوا الموطن الأصلي لبني ياس، واختير شيخهم من آل نهيان لأنهم اعتبروا من أهل الكفاءة وأصحاب الشرف. وقام مجلس التعاون عام 1981.","ص31، 41، 51"]],
+2:[["مراجعة المواقع والتواريخ","ليوا الموطن الأصلي لبني ياس، والعين وصلتها المياه العذبة من الجبال، وزركوه جزيرة فيها أطلال حصن أوربي، والربع الخالي «بحر الرمال». وانظر تواريخ 1833 و1948 و1968 و1981.","ص23–51"],["أنماط المعيشة","تنقسم القبائل إلى برية (ماشية وواحات) وبحرية (صيد وغوص وتجارة بحرية)، وبنو ياس يندرجون في الفئتين.","ص32"]],
+3:[["سلطة الشيخ","سلطة الشيخ سياسية في جوهرها، قامت على توازن الحقوق والواجبات لا على القوة. وللقبيلة استبداله إن لم يثبت أهليته.","ص48"],["تحالف بني ياس","قام التحالف على المصالح المشتركة والأعراف، ولم تكن رابطة الدم العامل الوحيد.","ص44"]],
+4:[["القرار الحكيم","تُحل الخلافات بالحوار وبسط الحجة، ويُنبذ العنف، وتنتهي محاولات الانفصال بالمصالحة والعودة.","ص38–51"]],
+5:[["جاهز؟","راجع ما تعلمته: البيئة والشرف والتحالف والزعامة وإرث الشيخ زايد.","ص23–51"]]};
+/* [أدوات] */
+const $=id=>document.getElementById(id),app=$("app");
+function h(t,a,...k){const e=document.createElement(t);for(const x in a||{})if(x!=="on"&&a[x]!=null)e.setAttribute(x,a[x]);if(a&&a.on)for(const ev in a.on)e.addEventListener(ev,a.on[ev]);k.flat().forEach(c=>e.append(c));return e}
+function shuf(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function clean(s){return s.replace(/[<>"'&`]/g,"").replace(/\s+/g," ").trim()}
+function fitBanner(){document.documentElement.style.setProperty("--banner-h",$("banner").offsetHeight+"px")}
+addEventListener("resize",fitBanner);
+function screen(title,...k){clearInterval(T);app.textContent="";const t=h("h1",{tabindex:"-1"},title);app.append(t,...k);t.focus()}
+let T=0,audio=null,AC=null;
+/* [الحالة والتخزين] */
+let S={v:CONFIG.ver,name:"",sec:"",best:{},m:{},bad:[]},mem=false;
+function save(){try{localStorage.setItem("rihla",JSON.stringify(S))}catch(e){mem=true}}
+function load(){try{const r=localStorage.getItem("rihla");if(r){const o=JSON.parse(r);if(o.v===CONFIG.ver)return o}}catch(e){mem=true}return null}
+/* [الصوت] */
+function beep(f){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;g.gain.value=.08;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+.15)}catch(e){}}
+/* [الشاشات] */
+function start(){const old=load();
+ const n=h("input",{id:"nm","aria-describedby":"e1",maxlength:60,autocomplete:"off"}),s=h("select",{id:"sc","aria-describedby":"e2"});
+ const secs=["اختر الشعبة"];for(let g=10;g<=12;g++)for(let i=1;i<=6;i++)secs.push(g+"/"+i);secs.push("أخرى");
+ secs.forEach((x,i)=>s.append(h("option",{value:i?x:""},x)));
+ const o=h("input",{id:"ot",maxlength:10,placeholder:"اكتب الشعبة",style:"display:none"});
+ const e1=h("div",{id:"e1",role:"alert",class:"err"}),e2=h("div",{id:"e2",role:"alert",class:"err"});
+ const go=h("button",{class:"p",disabled:""},"ابدأ الرحلة");
+ const val=()=>{const v=clean(n.value);const okN=v.split(" ").filter(Boolean).length>=3&&/^[A-Za-z\u0600-\u06FF ]+$/.test(v)&&v.length<=60;
+  const sv=s.value==="أخرى"?clean(o.value):s.value;o.style.display=s.value==="أخرى"?"block":"none";
+  e1.textContent=n.value&&!okN?"اكتب الاسم الثلاثي (ثلاث كلمات على الأقل، حروف ومسافات فقط).":"";
+  e2.textContent=s.value==="أخرى"&&!sv?"اكتب الشعبة.":"";go.disabled=!(okN&&sv);return[v,sv]};
+ [n,s,o].forEach(x=>x.addEventListener("input",val));
+ go.addEventListener("click",()=>{const[v,sv]=val();if(go.disabled)return;S={v:CONFIG.ver,name:v,sec:sv,best:{},m:{},bad:[]};save();map()});
+ const kids=[h("div",{class:"card"},h("label",{for:"nm"},"الاسم الثلاثي"),n,e1,h("label",{for:"sc"},"الشعبة"),s,o,e2,go)];
+ if(old&&old.name)kids.push(h("button",{on:{click:()=>{S=old;map()}}},"متابعة الرحلة: "+old.name));
+ if(mem)kids.push(h("p",{},"تنبيه: التخزين غير متاح، سيُحفظ التقدم في الذاكرة فقط."));
+ screen("رحلة عبر الزمن ⏳",h("p",{},"بوابة الزمن مفتوحة: تعلّم، ثم تحدَّ، ثم أتقن."),...kids)}
+function lvPct(n){const L=CONFIG.levels[n-1];return S.best[n]!=null?Math.round(S.best[n]/(L.pts*L.show)*100):null}
+function mastPct(ids){const cs=Object.keys(CONCEPTS).filter(c=>ids.length?Q.some(q=>q.l>0&&ids.includes(q.l)&&q.c.includes(c)):true);
+ const ok=cs.filter(c=>{const m=S.m[c];return m&&m.n>0&&m.r/m.n>=CONFIG.mastery/100&&m.r>=1});return cs.length?Math.round(ok.length/cs.length*100):0}
+function unlocked(n){if(n===1)return true;if(n===5)return mastPct([1,2,3,4])>=CONFIG.bossGate&&(lvPct(4)||0)>=CONFIG.pass;return(lvPct(n-1)||0)>=CONFIG.pass}
+function map(){const k=CONFIG.levels.map(L=>{const u=unlocked(L.n),p=lvPct(L.n);
+ return h("button",{disabled:u?null:"",on:{click:()=>lesson(L.n)},"aria-label":"المستوى "+L.n},(u?"▶ ":"🔒 ")+L.n+". "+L.name+(p!=null?" — "+p+"%"+(p>=CONFIG.pass?" ⭐":""):""))});
+ if(!unlocked(5)&&unlocked(4)&&S.best[4]!=null)k.push(h("p",{},"لفتح التحدي الأكبر أتقن "+CONFIG.bossGate+"% من مفاهيم المستويات 1–4 (إتقانك الحالي: "+mastPct([1,2,3,4])+"%). أعد المستويات لمراجعة مفاهيمك الضعيفة."));
+ k.push(h("button",{on:{click:()=>{if(confirm("إعادة الرحلة من البداية؟")){S.best={};S.m={};S.bad=[];save();map()}}}},"إعادة الرحلة"));
+ screen("خريطة الرحلة",h("p",{},S.name+" — "+S.sec),h("div",{class:"bar",role:"progressbar","aria-valuenow":mastPct([1,2,3,4,5]),"aria-valuemin":0,"aria-valuemax":100},h("i",{style:"width:"+mastPct([1,2,3,4,5])+"%"})),h("p",{},"تقدّم الإتقان: "+mastPct([1,2,3,4,5])+"%"),...k)}
+/* [المستويات] */
+function lesson(n){const cards=LESSONS[n]||[];let i=0;
+ const draw=()=>{const c=cards[i];screen("محطة المعرفة – المستوى "+n,h("div",{class:"card"},h("h2",{},c[0]),h("p",{},c[1]),h("small",{},"المرجع: "+c[2])),
+  h("button",{class:"p",on:{click:()=>{i++;i<cards.length?draw():run(n)}}},i<cards.length-1?"التالي":"ابدأ التحدي"),h("button",{on:{click:()=>run(n)}},"تخطَّ البطاقات"))};draw()}
+let R=null;
+function run(n){const L=CONFIG.levels[n-1];let qs=shuf(Q.filter(q=>q.l===n)).slice(0,L.show);
+ R={n,qs,i:0,h:CONFIG.hearts,pts:0,res:[]};ask()}
+/* [محرك الإتقان] */
+function record(q,ok){q.c.forEach(c=>{const m=S.m[c]=S.m[c]||{n:0,r:0,last:[]};m.n++;if(ok)m.r++;m.last=m.last.concat(ok?1:0).slice(-3)});if(!ok)S.bad.push(q.id)}
+function ask(){if(R.i>=R.qs.length)return finish();const q=R.qs[R.i],n=R.n;
+ let secs=CONFIG.time[n===5?"boss":q.t]*(CONFIG.extraTime?2:1),done=false;
+ const fb=h("div",{"aria-live":"polite",class:"card",style:"display:none"}),tm=h("div",{},"");
+ const end=(ok,extra)=>{if(done)return;done=true;clearInterval(T);record(q,ok);if(ok)R.pts+=CONFIG.levels[n-1].pts;else R.h--;beep(ok?660:200);
+  fb.style.display="block";fb.className="card "+(ok?"good":"wrong");
+  fb.append(h("b",{},ok?"✔ إجابة صحيحة":"✘ إجابة غير صحيحة"),h("p",{},(extra?extra+" ":"")+q.e),h("small",{},"المرجع: "+q.s),h("br"),
+   h("button",{class:"p",on:{click:()=>{if(R.h<=0){R.pts=0;R.i=0;tryAgain()}else{R.i++;ask()}}}},R.h<=0?"انتهت القلوب":"التالي"));
+  app.querySelectorAll("button:not(.p),select").forEach(b=>b.disabled=true);fb.querySelector("button").focus()};
+ const body=h("div",{class:"card"},h("p",{},q.x));
+ if(q.t==="mcq"||q.t==="scenario"){const ord=shuf(q.o.map((t,i)=>i));ord.forEach((oi,k)=>body.append(h("button",{on:{click:()=>end(oi===q.a,q.f?q.f[oi]:"")}},(k+1)+". "+q.o[oi])))}
+ else if(q.t==="tf"){const b=h("div",{});body.append(b);[true,false].forEach(v=>b.append(h("button",{on:{click:()=>{b.textContent="";b.append(h("p",{},"اختر التبرير الصحيح:"));const ord=shuf(q.o.map((t,i)=>i));ord.forEach(oi=>b.append(h("button",{on:{click:()=>end(v===q.v&&oi===q.a,v===q.v?"":"الحكم على العبارة غير صحيح.")}},q.o[oi])))}}},v?"صواب":"خطأ")))}
+ else if(q.t==="order"){const pick=[],box=h("p",{},"");const items=shuf(q.i);const bs=items.map(t=>{const b=h("button",{on:{click:()=>{pick.push(t);b.disabled=true;box.textContent="ترتيبك: "+pick.join(" ← ");if(pick.length===items.length)end(pick.every((v,i)=>v===q.i[i]),"الترتيب الصحيح: "+q.i.join(" ← ")+".")}}},t);return b});body.append(box,...bs)}
+ else if(q.t==="match"){const rs=shuf(q.p.map(p=>p[1])),sels=q.p.map(p=>{const s=h("select",{"aria-label":p[0]},h("option",{value:""},"اختر"),rs.map(r=>h("option",{value:r},r)));body.append(h("label",{},p[0]),s);return s});
+  body.append(h("button",{class:"p",on:{click:()=>end(sels.every((s,i)=>s.value===q.p[i][1]),"الصحيح: "+q.p.map(p=>p[0]+" ← "+p[1]).join("، ")+".")}},"تحقق"))}
+ const hint=h("button",{on:{click:e=>{e.target.disabled=true;body.append(h("small",{},"تلميح: "+q.h))}}},"💡 تلميح");
+ const tick=()=>{tm.textContent="⏱ "+secs+" ث   ❤ "+R.h;tm.className=secs<=5?"low":""};tick();
+ screen("المستوى "+n+" – سؤال "+(R.i+1)+"/"+R.qs.length,tm,body,hint,fb);
+ T=setInterval(()=>{secs--;tick();if(secs<=5)beep(880);if(secs<=0)end(false,"انتهى الوقت.")},1000);
+ document.addEventListener("keydown",kd);function kd(e){if(!document.body.contains(body)){document.removeEventListener("keydown",kd);return}const b=body.querySelectorAll("button");if(/^[1-4]$/.test(e.key)&&b[e.key-1])b[e.key-1].click()}}
+function tryAgain(){save();screen("أعد المحاولة",h("div",{class:"card"},h("p",{},"نفدت القلوب وأُلغيت نقاط هذا المستوى. سيُعاد خلط الأسئلة.")),h("button",{class:"p",on:{click:()=>run(R.n)}},"أعد المحاولة"),h("button",{on:{click:map}},"الخريطة"))}
+function finish(){const L=CONFIG.levels[R.n-1],tot=L.pts*L.show;S.best[R.n]=Math.max(S.best[R.n]||0,R.pts);save();const p=Math.round(R.pts/tot*100);
+ if(R.n===5)return results();
+ screen("نتيجة المستوى "+R.n,h("div",{class:"card"},h("p",{},p+"% ("+R.pts+"/"+tot+")"),h("p",{},p>=CONFIG.pass?"✔ نجحت وفُتح المستوى التالي (أو شرط الإتقان للتحدي الأكبر)":"✘ أعد المستوى لبلوغ "+CONFIG.pass+"%")),h("button",{class:"p",on:{click:map}},"العودة للخريطة"))}
+/* [النتائج والمراجعة] */
+function total(){let a=0,b=0;CONFIG.levels.forEach(L=>{a+=S.best[L.n]||0;b+=L.pts*L.show});return Math.round(a/b*100)}
+function results(){const pct=total(),ms=mastPct([1,2,3,4,5]),pass=pct>=CONFIG.pass&&ms>=CONFIG.mastery;
+ const rep=Object.keys(CONCEPTS).map(c=>{const m=S.m[c],st=m&&m.n&&m.r/m.n>=CONFIG.mastery/100&&m.r>=1?"✔ متقَن":m?"◐ قيد التعلّم":"✘ يحتاج مراجعة";return h("li",{},c+" "+CONCEPTS[c]+": "+st)});
+ const k=[h("div",{class:"card"},h("p",{},"النسبة: "+pct+"% — الإتقان: "+ms+"%")),h("div",{class:"card"},h("h2",{},"بطاقة تقرير الإتقان"),h("ul",{},rep))];
+ if(pass)k.push(h("button",{class:"p",on:{click:cert}},"احصل على شهادتك"));
+ else{const weak=Object.keys(CONCEPTS).filter(c=>!(S.m[c]&&S.m[c].n&&S.m[c].r/S.m[c].n>=CONFIG.mastery/100));
+  k.push(h("div",{class:"card"},h("h2",{},"خطة العلاج الشخصية"),h("p",{},"حاول مرة أخرى يا بطل. راجع: "+weak.map(c=>CONCEPTS[c]).join("، ")),h("p",{},"الأسئلة التي أخطأت فيها: "+S.bad.map(id=>{const q=Q.find(x=>x.id===id);return q?q.s:""}).filter((v,i,a)=>a.indexOf(v)===i).join(" | ")))),k.push(h("button",{on:{click:map}},"إعادة المستويات الضعيفة"))}
+ screen("النتائج",...k);if(pass)beep(880)}
+/* [الشهادة] */
+function cert(){const d=new Intl.DateTimeFormat("ar",{dateStyle:"long"}).format(new Date());
+ screen("الشهادة",h("div",{id:"cert"},h("h3",{},CONFIG.school),h("h2",{},"شهادة إتمام – بطل الدراسات الاجتماعية"),
+  h("p",{},"تشهد إدارة المدرسة بأن الطالب/ة: "+S.name+" من الشعبة: "+S.sec+" قد أتمّ/ت بنجاح رحلة عبر الزمن في مادة الدراسات الاجتماعية وحقق/ت نسبة "+total()+"% ونال/ت لقب بطل الدراسات الاجتماعية"),
+  h("p",{},d),h("div",{class:"row"},h("span",{},CONFIG.teacher),h("span",{},CONFIG.principal))),
+  h("button",{class:"p noprint",on:{click:()=>print()}},"طباعة / حفظ PDF"),h("button",{on:{click:map}},"الخريطة"))}
+/* [وضع المعلم] */
+function teacher(){const rows=Q.map(q=>h("tr",{},[q.l,q.t,q.c.join(","),q.x,q.t==="mcq"||q.t==="scenario"?q.o[q.a]:q.t==="tf"?(q.v?"صواب":"خطأ")+" / "+q.o[q.a]:q.t==="order"?q.i.join(" ← "):q.p.map(p=>p.join("=")).join("; "),q.h,q.e,q.s].map(v=>h("td",{style:"border:1px solid #888;padding:4px"},String(v)))));
+ const cov={};Q.forEach(q=>q.c.forEach(c=>cov[c]=(cov[c]||0)+1));
+ screen("وضع المعلم",h("p",{},"عدد الأسئلة: "+Q.length+" — تغطية المفاهيم: "+Object.keys(CONCEPTS).map(c=>c+"="+(cov[c]||0)).join("، ")),h("button",{on:{click:()=>print()}},"طباعة الجدول"),h("div",{style:"overflow-x:auto"},h("table",{style:"font-size:.8rem"},rows)))}
+/* [التهيئة] */
+function validateQuestions(){const cov={};Q.forEach(q=>{if(!q.s||!q.c||!q.c.length)console.warn("ناقص مرجع/مفهوم:",q.id);q.c.forEach(c=>cov[c]=(cov[c]||0)+1)});Object.keys(CONCEPTS).forEach(c=>{if((cov[c]||0)<3)console.warn("المفهوم "+c+" مغطّى بـ"+(cov[c]||0)+" أسئلة فقط")})}
+fitBanner();validateQuestions();
+if(/[?&]teacher=1/.test(location.search))teacher();else start();
+</script></body></html>
